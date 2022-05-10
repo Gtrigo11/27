@@ -10,12 +10,16 @@ var barco;
 var barcos = []
 var barcoimage, barcosheet
 var barcomatriz = []
+var isGameOver = false
+var isLaughing = false
+var rindo 
 
 function preload() {
   backgroundImg = loadImage("./assets/background.gif");
   towerImage = loadImage("./assets/tower.png");
   barcoimage = loadImage('./assets/boat/boat.png');
   barcosheet = loadJSON ('./assets/boat/boat.json');
+  rindo = loadSound ('./assets/pirate_laugh.mp3')
 }
 
 function setup() {
@@ -73,12 +77,17 @@ function keyReleased(){
 function keyPressed(){
   if(keyCode===UP_ARROW){
     bola = new Bola(cannon.x,cannon.y)
+    bola.trajetoria = []
+    Matter.Body.setAngle(bola.body,cannon.angle)
     ball.push(bola)
   }
 }
-function mostrarBall(){
+function mostrarBall(bola,index){
  if(bola){
  bola.mostrar()
+ if(bola.body.position.x>= width||bola.body.position.y>= height-50){
+  bola.remove(index)
+ }
  } 
 }
 function mostrarBarcos(){
@@ -86,7 +95,7 @@ function mostrarBarcos(){
     if (barcos[barcos.length-1]=== undefined || barcos[barcos.length-1].body.position.x<width-300){
      var position = [-70,-20,-30,-80]
      var guardar = random(position)
-     barco = new Barco(width, height-50, 170,170, guardar)
+     barco = new Barco(width, height-50, 170,170, guardar, barcomatriz)
      barcos.push(barco)
     }
     for (var i = 0; i< barcos.length;i=i+1){
@@ -94,10 +103,21 @@ function mostrarBarcos(){
         Matter.Body.setVelocity(barcos[i].body,{x:-1, y:0})
         barcos[i].mostrar()
         barcos[i].animar()
+        var colisao = Matter.SAT.collides(this.tower,barcos[i].body)
+        if (colisao.collided&&!barcos[i].isBroken){
+          if (!isLaughing&&!rindo.isPlaying()){
+            rindo.play()
+            isLaughing = true
+          }
+          isGameOver = true
+          gameOver()
+        }
+      }else {
+        barcos[i]
       }
     }
   } else {
-    barco = new Barco(width-70, height-50, 170,170, -80)
+    barco = new Barco(width-70, height-50, 170,170, -80, barcomatriz)
     barcos.push(barco)
   }
 }
@@ -112,4 +132,20 @@ function destroi (index){
         }
       }
   }
+}
+function gameOver() {
+  swal({
+      title: `Fim de Jogo!!!`,
+      text: "Obrigada por jogar!!",
+      imageUrl:
+        "https://raw.githubusercontent.com/whitehatjr/PiratesInvasion/main/assets/boat.png",
+      imageSize: "150x150",
+      confirmButtonText: "Jogar Novamente"
+    },
+    function(isConfirm) {
+      if (isConfirm) {
+        location.reload();
+      }
+    }
+  );
 }
